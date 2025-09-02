@@ -1,3 +1,4 @@
+import random
 from typing import Dict, List
 from simulator.market.space import HexGrid
 from simulator.agents.rider.rider import RiderAgent
@@ -25,15 +26,16 @@ class Market:
         """
         Creates the rider population.
         """
+        rider_config = config['market']['rider_population']
         for i in range(config['market']['initial_riders']):
             rider = RiderAgent(
                 agent_id=i,
                 initial_location=(0, 0), # Placeholder
                 has_app_a=True, # Placeholder
                 has_app_b=True, # Placeholder
-                preference_score=0.5, # Placeholder
-                price_sensitivity=0.5, # Placeholder
-                time_sensitivity=0.5, # Placeholder
+                preference_score=random.normalvariate(*rider_config['preference_score_dist']), # Placeholder
+                price_sensitivity=random.normalvariate(*rider_config['price_sensitivity_dist']), # Placeholder
+                time_sensitivity=random.normalvariate(*rider_config['time_sensitivity_dist']), # Placeholder
                 rides_per_week=3 # Placeholder
             )
             self.riders.append(rider)
@@ -43,14 +45,15 @@ class Market:
         """
         Creates the driver population.
         """
+        driver_config = config['market']['driver_population']
         for i in range(config['market']['initial_drivers']):
             driver = DriverAgent(
                 agent_id=i + config['market']['initial_riders'],
                 initial_location=(0, 0), # Placeholder
                 is_exclusive=False, # Placeholder
-                preference_score=0.5, # Placeholder
-                price_sensitivity=0.5, # Placeholder
-                eta_sensitivity=0.5 # Placeholder
+                preference_score=random.normalvariate(*driver_config['preference_score_dist']), # Placeholder
+                price_sensitivity=random.normalvariate(*driver_config['price_sensitivity_dist']), # Placeholder
+                eta_sensitivity=random.normalvariate(*driver_config['eta_sensitivity_dist']) # Placeholder
             )
             self.drivers.append(driver)
             self.grid.add_agent(driver)

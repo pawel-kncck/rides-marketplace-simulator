@@ -1,0 +1,26 @@
+simulation:
+  duration_days: 7
+  ticks_per_major: 360 # (e.g., if a major tick is 1 hour, and a minor tick is 10 seconds)
+  random_seed: 42
+
+market:
+  grid_resolution: 100 # Example value
+  initial_riders: 1000
+  initial_drivers: 200
+  rider_population:
+    # Placeholder values for agent creation
+    price_sensitivity_dist: [0.5, 0.2] # [mean, std_dev]
+    time_sensitivity_dist: [0.5, 0.2]
+    preference_score_dist: [0.0, 0.3]
+  driver_population:
+    price_sensitivity_dist: [0.7, 0.1]
+    eta_sensitivity_dist: [0.3, 0.1]
+    preference_score_dist: [0.0, 0.2]
+
+platforms:
+  A:
+    matcher:
+      max_order_tries: 3
+  B:
+    matcher:
+      max_order_tries: 3
