@@ -1,0 +1,8 @@
+simulation:
+  duration_days: 1
+  ticks_per_major: 10
+
+market:
+  grid_resolution: 10
+  initial_riders: 5
+  initial_drivers: 2
