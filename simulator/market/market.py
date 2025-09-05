@@ -130,4 +130,24 @@ class Market:
         pass
 
     def update_agent_locations(self):
-        pass
+        """
+        Find matched drivers and riders and simulate trip completion.
+        """
+        for driver in self.drivers:
+            if driver.current_state == DriverState.DRIVING_TO_RIDER:
+                # Find the corresponding rider
+                for rider in self.riders:
+                    if rider.current_state == RiderState.ORDERED:
+                        # This is a simplification. A real implementation would
+                        # have a direct link between the matched driver and rider.
+                        
+                        # Simulate instantaneous trip completion
+                        new_location = (random.randint(0, 10000), random.randint(0, 10000))
+                        driver.location = new_location
+                        rider.location = new_location
+
+                        driver.current_state = DriverState.IDLE
+                        rider.current_state = RiderState.IDLE
+
+                        print(f"Trip completed for Rider {rider.agent_id} and Driver {driver.agent_id}.")
+                        break # Move to the next driver
