@@ -124,9 +124,11 @@ class Market:
                         chosen_platform.matcher.process_order(rider, 20.0)
 
     def process_matcher_offers(self):
+        # print("Processing matcher offers...")
         pass
 
     def process_driver_responses(self):
+        # print("Processing driver responses...")
         pass
 
     def update_agent_locations(self):
