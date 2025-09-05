@@ -8,14 +8,18 @@ market:
   initial_riders: 1000
   initial_drivers: 200
   rider_population:
-    # Placeholder values for agent creation
     price_sensitivity_dist: [0.5, 0.2] # [mean, std_dev]
     time_sensitivity_dist: [0.5, 0.2]
     preference_score_dist: [0.0, 0.3]
+    rides_per_week_dist: [3.0, 1.5]
+    pct_with_app_a_only: 0.20
+    pct_with_app_b_only: 0.20
+    pct_with_both_apps: 0.60
   driver_population:
     price_sensitivity_dist: [0.7, 0.1]
     eta_sensitivity_dist: [0.3, 0.1]
     preference_score_dist: [0.0, 0.2]
+    pct_exclusive: 0.15
 
 platforms:
   A:

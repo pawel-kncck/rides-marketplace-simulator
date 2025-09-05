@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import Mock
+from unittest.mock import Mock, call
 from simulator.core.engine import Engine
 
 def test_engine_run_loop():
@@ -19,7 +19,19 @@ def test_engine_run_loop():
     engine.run(duration_days=duration_days, ticks_per_major=ticks_per_major)
 
     # 3. Assert
-    # We can assert that the placeholder methods were called the correct number of times
-    # For now, we'll just check that the run completes without error.
-    # A more detailed test would require implementing the market methods.
-    assert market.method_calls == [] # No methods are actually called yet
+    expected_calls = []
+    for day in range(duration_days):
+        expected_calls.extend([
+            call.update_platform_strategies(),
+            call.update_driver_go_online_decisions(),
+            call.update_rider_search_intent()
+        ])
+        for tick in range(ticks_per_major):
+            expected_calls.extend([
+                call.process_rider_searches(),
+                call.process_matcher_offers(),
+                call.process_driver_responses(),
+                call.update_agent_locations()
+            ])
+    
+    assert market.method_calls == expected_calls

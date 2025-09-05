@@ -25,16 +25,16 @@ class Engine:
         """
         for day in range(duration_days):
             # --- Major Tick Logic ---
-            # self.market.update_platform_strategies()
-            # self.market.update_driver_go_online_decisions()
-            # self.market.update_rider_search_intent()
+            self.market.update_platform_strategies()
+            self.market.update_driver_go_online_decisions()
+            self.market.update_rider_search_intent()
 
             for tick in range(ticks_per_major):
                 # --- Minor Tick Logic ---
-                # self.market.process_rider_searches()
-                # self.market.process_matcher_offers()
-                # self.market.process_driver_responses()
-                # self.market.update_agent_locations()
+                self.market.process_rider_searches()
+                self.market.process_matcher_offers()
+                self.market.process_driver_responses()
+                self.market.update_agent_locations()
                 pass
 
             print(f"Day {day + 1} complete.")

@@ -2,6 +2,7 @@ import argparse
 import yaml
 from simulator.market.market import Market
 from simulator.platform.matcher import Matcher
+from simulator.platform.platform import Platform
 from simulator.core.engine import Engine
 
 def main():
@@ -14,9 +15,17 @@ def main():
         config = yaml.safe_load(f)
 
     market = Market(config)
-    # For now, we'll use a single matcher for all platforms
-    matcher = Matcher(market.grid)
-    platforms = [] # Placeholder for platform objects
+    
+    # Create platforms based on the config file
+    platforms = []
+    for platform_id, platform_config in config['platforms'].items():
+        matcher_config = platform_config['matcher']
+        matcher = Matcher(
+            grid=market.grid,
+            max_order_tries=matcher_config['max_order_tries']
+        )
+        platform = Platform(platform_id, matcher)
+        platforms.append(platform)
 
     engine = Engine(market, platforms)
 
