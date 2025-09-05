@@ -1,4 +1,5 @@
 import random
+import logging
 from typing import Dict, List
 from simulator.market.space import HexGrid
 from simulator.agents.rider.rider import RiderAgent, RiderState
@@ -86,6 +87,7 @@ class Market:
             if driver.current_state == DriverState.OFFLINE:
                 if random.random() < 0.1:
                     driver.current_state = DriverState.IDLE
+                    logging.info(f"Driver {driver.agent_id} is now IDLE.")
 
     def update_rider_search_intent(self):
         """
@@ -96,6 +98,7 @@ class Market:
                 prob = rider.rides_per_week / (7 * 24)
                 if random.random() < prob:
                     rider.current_state = RiderState.SEARCHING
+                    logging.info(f"Rider {rider.agent_id} is now SEARCHING.")
 
     def process_rider_searches(self):
         for rider in self.riders:
@@ -151,5 +154,5 @@ class Market:
                         driver.current_state = DriverState.IDLE
                         rider.current_state = RiderState.IDLE
 
-                        print(f"Trip completed for Rider {rider.agent_id} and Driver {driver.agent_id}.")
+                        logging.info(f"Trip completed for Rider {rider.agent_id} and Driver {driver.agent_id}.")
                         break # Move to the next driver

@@ -1,9 +1,17 @@
 import argparse
 import yaml
+import logging
 from simulator.market.market import Market
 from simulator.platform.matcher import Matcher
 from simulator.platform.platform import Platform
 from simulator.core.engine import Engine
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    filename='simulation.log',
+    filemode='w'
+)
 
 def main():
     """Main entry point for the simulator."""
