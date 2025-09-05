@@ -27,6 +27,7 @@ def main():
         platform = Platform(platform_id, matcher)
         platforms.append(platform)
 
+    market.set_platforms(platforms)
     engine = Engine(market, platforms)
 
     engine.run(

@@ -3,6 +3,8 @@ from typing import Dict, List
 from simulator.market.space import HexGrid
 from simulator.agents.rider.rider import RiderAgent, RiderState
 from simulator.agents.driver.driver import DriverAgent, DriverState
+from simulator.platform.platform import Platform
+
 
 class Market:
     """
@@ -16,11 +18,16 @@ class Market:
             config: The simulation configuration.
         """
         self.grid = HexGrid(config['market']['grid_resolution'])
+        self.platforms: List[Platform] = []
         self.riders: List[RiderAgent] = []
         self.drivers: List[DriverAgent] = []
 
         self._create_riders(config)
         self._create_drivers(config)
+
+    def set_platforms(self, platforms: List[Platform]):
+        """Sets the platforms for the market."""
+        self.platforms = platforms
 
     def _create_riders(self, config: Dict):
         """
@@ -91,7 +98,30 @@ class Market:
                     rider.current_state = RiderState.SEARCHING
 
     def process_rider_searches(self):
-        pass
+        for rider in self.riders:
+            if rider.current_state == RiderState.SEARCHING:
+                chosen_platform_id = None
+                # Platform Choice Logic
+                if rider.has_app_a and rider.preference_score > 0:
+                    chosen_platform_id = 'A'
+                elif rider.has_app_b and rider.preference_score <= 0:
+                    chosen_platform_id = 'B'
+                elif rider.has_app_a:
+                    chosen_platform_id = 'A'
+                elif rider.has_app_b:
+                    chosen_platform_id = 'B'
+
+                if chosen_platform_id:
+                    # Find the Platform Object
+                    chosen_platform = None
+                    for p in self.platforms:
+                        if p.platform_id == chosen_platform_id:
+                            chosen_platform = p
+                            break
+                    
+                    if chosen_platform:
+                        # Process the Order
+                        chosen_platform.matcher.process_order(rider, 20.0)
 
     def process_matcher_offers(self):
         pass

@@ -1,4 +1,5 @@
 import pytest
+from unittest.mock import patch
 from simulator.market.market import Market
 
 @pytest.fixture
@@ -12,17 +13,22 @@ def config():
             'rider_population': {
                 'price_sensitivity_dist': [0.5, 0.2],
                 'time_sensitivity_dist': [0.5, 0.2],
-                'preference_score_dist': [0.0, 0.3]
+                'preference_score_dist': [0.0, 0.3],
+                'rides_per_week_dist': [5, 2],
+                'pct_with_app_a_only': 0.3,
+                'pct_with_app_b_only': 0.3
             },
             'driver_population': {
                 'price_sensitivity_dist': [0.7, 0.1],
                 'eta_sensitivity_dist': [0.3, 0.1],
-                'preference_score_dist': [0.0, 0.2]
+                'preference_score_dist': [0.0, 0.2],
+                'pct_exclusive': 0.5
             }
         }
     }
 
-def test_market_initialization(config):
+@patch('random.randint', return_value=0)
+def test_market_initialization(mock_randint, config):
     """Tests that the Market is initialized with the correct properties."""
     # 1. Act
     market = Market(config)
