@@ -5,7 +5,7 @@ from simulator.market.space import HexGrid
 from simulator.agents.rider.rider import RiderAgent, RiderState
 from simulator.agents.driver.driver import DriverAgent, DriverState
 from simulator.platform.platform import Platform
-
+from simulator.utils.time_utils import ticks_to_time_string # <-- ADD THIS
 
 class Market:
     """
@@ -76,31 +76,35 @@ class Market:
             self.drivers.append(driver)
             self.grid.add_agent(driver)
 
-    def update_platform_strategies(self):
+    def update_platform_strategies(self, day: int):
         pass
 
-    def update_driver_go_online_decisions(self):
-        """
-        Decide which OFFLINE drivers should come online for a "shift."
-        """
+    def update_driver_go_online_decisions(self, day: int):
+        # We need ticks_per_major to format the time string correctly
+        # This is a simplification; a better implementation would pass config around
+        time_str = ticks_to_time_string(day, 0, 360) 
         for driver in self.drivers:
             if driver.current_state == DriverState.OFFLINE:
                 if random.random() < 0.1:
                     driver.current_state = DriverState.IDLE
-                    logging.info(f"Driver {driver.agent_id} is now IDLE.")
+                    logging.info(f"{time_str} | Driver {driver.agent_id} is now IDLE.")
+            elif driver.current_state == DriverState.IDLE:
+                if random.random() < 0.05:
+                    driver.current_state = DriverState.OFFLINE
+                    logging.info(f"{time_str} | Driver {driver.agent_id} is now OFFLINE.")
 
-    def update_rider_search_intent(self):
-        """
-        Determine which IDLE riders decide to start looking for a ride.
-        """
+    def update_rider_search_intent(self, day: int):
+        time_str = ticks_to_time_string(day, 0, 360)
         for rider in self.riders:
             if rider.current_state == RiderState.IDLE:
                 prob = rider.rides_per_week / (7 * 24)
                 if random.random() < prob:
                     rider.current_state = RiderState.SEARCHING
-                    logging.info(f"Rider {rider.agent_id} is now SEARCHING.")
+                    rider.patience_timer = 180 # Set patience to 30 minutes (180 ticks * 10s/tick)
+                    logging.info(f"{time_str} | Rider {rider.agent_id} is now SEARCHING.")
 
-    def process_rider_searches(self):
+    def process_rider_searches(self, day: int, tick: int):
+        time_str = ticks_to_time_string(day, tick, 360)
         for rider in self.riders:
             if rider.current_state == RiderState.SEARCHING:
                 chosen_platform_id = None
@@ -121,20 +125,30 @@ class Market:
                         if p.platform_id == chosen_platform_id:
                             chosen_platform = p
                             break
-                    
-                    if chosen_platform:
-                        # Process the Order
-                        chosen_platform.matcher.process_order(rider, 20.0)
+                
+                # This is a simplification. Assume 'success' is whether a driver was found.
+                match_successful = False
+                if chosen_platform:
+                    driver, status = chosen_platform.matcher.process_order(rider, 20.0)
+                    if status == "MATCH_SUCCESSFUL":
+                        match_successful = True
 
-    def process_matcher_offers(self):
+                if not match_successful:
+                    rider.patience_timer -= 1
+                    if rider.patience_timer <= 0:
+                        rider.current_state = RiderState.ABANDONED_SEARCH
+                        logging.info(f"{time_str} | Rider {rider.agent_id} ABANDONED SEARCH.")
+
+    def process_matcher_offers(self, day: int, tick: int):
         # print("Processing matcher offers...")
         pass
 
-    def process_driver_responses(self):
+    def process_driver_responses(self, day: int, tick: int):
         # print("Processing driver responses...")
         pass
-
-    def update_agent_locations(self):
+    
+    def update_agent_locations(self, day: int, tick: int):
+        time_str = ticks_to_time_string(day, tick, 360)
         """
         Find matched drivers and riders and simulate trip completion.
         """
@@ -154,5 +168,5 @@ class Market:
                         driver.current_state = DriverState.IDLE
                         rider.current_state = RiderState.IDLE
 
-                        logging.info(f"Trip completed for Rider {rider.agent_id} and Driver {driver.agent_id}.")
+                        logging.info(f"{time_str} | Trip completed for Rider {rider.agent_id} and Driver {driver.agent_id}.")
                         break # Move to the next driver

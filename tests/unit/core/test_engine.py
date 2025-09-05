@@ -22,16 +22,16 @@ def test_engine_run_loop():
     expected_calls = []
     for day in range(duration_days):
         expected_calls.extend([
-            call.update_platform_strategies(),
-            call.update_driver_go_online_decisions(),
-            call.update_rider_search_intent()
+            call.update_platform_strategies(day),
+            call.update_driver_go_online_decisions(day),
+            call.update_rider_search_intent(day)
         ])
         for tick in range(ticks_per_major):
             expected_calls.extend([
-                call.process_rider_searches(),
-                call.process_matcher_offers(),
-                call.process_driver_responses(),
-                call.update_agent_locations()
+                call.process_rider_searches(day, tick),
+                call.process_matcher_offers(day, tick),
+                call.process_driver_responses(day, tick),
+                call.update_agent_locations(day, tick)
             ])
     
     assert market.method_calls == expected_calls

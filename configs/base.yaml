@@ -6,3 +6,23 @@ market:
   grid_resolution: 10
   initial_riders: 5
   initial_drivers: 2
+  rider_population:
+    price_sensitivity_dist: [0.5, 0.2]
+    time_sensitivity_dist: [0.5, 0.2]
+    preference_score_dist: [0.0, 0.3]
+    rides_per_week_dist: [5, 2]
+    pct_with_app_a_only: 0.3
+    pct_with_app_b_only: 0.3
+  driver_population:
+    price_sensitivity_dist: [0.7, 0.1]
+    eta_sensitivity_dist: [0.3, 0.1]
+    preference_score_dist: [0.0, 0.2]
+    pct_exclusive: 0.5
+
+platforms:
+  A:
+    matcher:
+      max_order_tries: 3
+  B:
+    matcher:
+      max_order_tries: 3
