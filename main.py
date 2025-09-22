@@ -8,7 +8,7 @@ from simulator.core.engine import Engine
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
+    format='%(asctime)s | %(message)s',
     filename='simulation.log',
     filemode='w'
 )
@@ -30,7 +30,8 @@ def main():
         matcher_config = platform_config['matcher']
         matcher = Matcher(
             grid=market.grid,
-            max_order_tries=matcher_config['max_order_tries']
+            max_order_tries=matcher_config['max_order_tries'],
+            ticks_per_major=config['simulation']['ticks_per_major']
         )
         platform = Platform(platform_id, matcher)
         platforms.append(platform)

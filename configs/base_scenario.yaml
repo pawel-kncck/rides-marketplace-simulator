@@ -1,10 +1,10 @@
 simulation:
-  duration_days: 7
-  ticks_per_major: 360 # (e.g., if a major tick is 1 hour, and a minor tick is 10 seconds)
+  duration_days: 1
+  ticks_per_major: 8640 # (e.g., if a major tick is 1 hour, and a minor tick is 10 seconds)
   random_seed: 42
 
 market:
-  grid_resolution: 1000 # Example value
+  grid_resolution: 3333 # Example value
   initial_riders: 1000
   initial_drivers: 200
   rider_population:

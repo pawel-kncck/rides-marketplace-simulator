@@ -101,14 +101,16 @@ class Market:
     def handle_event(self, event: Dict, current_tick: int):
         action = event.get("action")
         agent_id = event.get("agent_id")
-        time_str = ticks_to_time_string(current_tick // self.ticks_per_major, current_tick % self.ticks_per_major, self.ticks_per_major)
+        day = current_tick // self.ticks_per_major
+        tick = current_tick % self.ticks_per_major
+        time_str = ticks_to_time_string(day, tick, self.ticks_per_major)
 
         if action == "EVALUATE_DRIVER_GO_ONLINE":
             driver = next((d for d in self.drivers if d.agent_id == agent_id), None)
             if driver and driver.current_state == DriverState.OFFLINE:
                 if random.random() < 0.1:  # Simplified probability
                     driver.current_state = DriverState.IDLE
-                    logging.info(f"{time_str} | Driver {driver.agent_id} is now IDLE at location {driver.location}.")
+                    logging.info(f"DRIVER  | STATE_IDLE       | {time_str} | Driver {driver.agent_id} is now IDLE at location {driver.location}.")
             
             if driver:
                 # Schedule next evaluation
@@ -126,7 +128,7 @@ class Market:
                 if random.random() < prob:
                     rider.current_state = RiderState.SEARCHING
                     rider.patience_timer = 180  # 30 minutes
-                    logging.info(f"{time_str} | Rider {rider.agent_id} is now SEARCHING.")
+                    logging.info(f"RIDER   | STATE_SEARCHING  | {time_str} | Rider {rider.agent_id} is now SEARCHING.")
 
             if rider:
                 # Schedule next evaluation with some randomness
@@ -145,8 +147,7 @@ class Market:
         for rider in self.riders:
             if rider.current_state == RiderState.SEARCHING:
                 order_id = f"order_{rider.agent_id}_{day}_{tick}"
-                logging.info(f"{time_str} | Rider {rider.agent_id} is now SEARCHING with Order {order_id}.")
-                logging.info(f"Rider {rider.agent_id} starting search for Order {order_id} from location {rider.location}.")
+                logging.info(f"RIDER   | ORDER_CREATED    | {time_str} | Rider {rider.agent_id} starting search for Order {order_id} from location {rider.location}.")
 
                 chosen_platform_id = None
                 if rider.has_app_a and rider.preference_score > 0:
@@ -162,24 +163,24 @@ class Market:
                     chosen_platform = next((p for p in self.platforms if p.platform_id == chosen_platform_id), None)
                     
                     if chosen_platform:
-                        driver, status = chosen_platform.matcher.process_order(rider, 20.0, order_id)
+                        driver, status = chosen_platform.matcher.process_order(rider, 20.0, order_id, day, tick)
                         if status == "MATCH_SUCCESSFUL":
                             rider.current_state = RiderState.ORDERED
                             driver.current_state = DriverState.DRIVING_TO_RIDER
                             match_info = {"driver_id": driver.agent_id, "rider_id": rider.agent_id, "platform_id": chosen_platform.platform_id, "order_id": order_id}
                             rider.match = match_info
                             driver.match = match_info
-                            logging.info(f"{time_str} | Match successful for Order {order_id} (Rider {rider.agent_id} and Driver {driver.agent_id} on Platform {chosen_platform.platform_id})")
+                            logging.info(f"MARKET  | MATCH_SUCCESSFUL | {time_str} | Match successful for Order {order_id} (Rider {rider.agent_id} and Driver {driver.agent_id} on Platform {chosen_platform.platform_id})")
                         else:
                             rider.patience_timer -= 1
                             if rider.patience_timer <= 0:
                                 rider.current_state = RiderState.ABANDONED_SEARCH
-                                logging.info(f"{time_str} | Rider {rider.agent_id} ABANDONED SEARCH for Order {order_id}.")
+                                logging.info(f"RIDER   | SEARCH_ABANDONED | {time_str} | Rider {rider.agent_id} ABANDONED SEARCH for Order {order_id}.")
                     else:
                         rider.patience_timer -= 1
                         if rider.patience_timer <= 0:
                             rider.current_state = RiderState.ABANDONED_SEARCH
-                            logging.info(f"{time_str} | Rider {rider.agent_id} ABANDONED SEARCH for Order {order_id}.")
+                            logging.info(f"RIDER   | SEARCH_ABANDONED | {time_str} | Rider {rider.agent_id} ABANDONED SEARCH for Order {order_id}.")
 
     def process_matcher_offers(self, day: int, tick: int):
         pass
@@ -208,7 +209,7 @@ class Market:
                     driver.match = None
                     rider.match = None
                     
-                    logging.info(f"{time_str} | Trip completed for Rider {rider.agent_id} and Driver {driver.agent_id}.")
+                    logging.info(f"MARKET  | TRIP_COMPLETED   | {time_str} | Trip completed for Rider {rider.agent_id} and Driver {driver.agent_id}.")
 
                     # Schedule next evaluations
                     self.engine.schedule_event(
