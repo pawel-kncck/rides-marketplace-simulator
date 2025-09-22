@@ -4,7 +4,7 @@ simulation:
   random_seed: 42
 
 market:
-  grid_resolution: 100 # Example value
+  grid_resolution: 1000 # Example value
   initial_riders: 1000
   initial_drivers: 200
   rider_population:

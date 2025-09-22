@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>5_agent_driver.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="developer-guide-the-driver-agent">Developer Guide: The Driver Agent</h1>
+<p>This document provides a deep dive into the <code>DriverAgent</code>. We will methodically analyze its structure, its role within the simulation, and the logic that dictates its behavior. The goal is to provide developers with a clear and comprehensive understanding, enabling them to extend the agent's logic or identify areas for improvement.</p>
+<p>Similar to the <code>RiderAgent</code>, the <code>DriverAgent</code> class in <code>simulator/agents/driver/driver.py</code> is primarily a <strong>data container</strong>. The logic that governs its state transitions and decisions is located in other modules, specifically <code>simulator/market/market.py</code> and <code>simulator/platform/matcher.py</code>.</p>
+<hr>
+<h2 id="1-core-components-the-anatomy-of-a-driver">1. Core Components: The Anatomy of a Driver</h2>
+<p>We will start by examining the <code>DriverAgent</code>'s definition in <code>simulator/agents/driver/driver.py</code>.</p>
+<h3 id="the-driverstate-enum-a-drivers-work-cycle"><strong>The <code>DriverState</code> Enum: A Driver's Work Cycle</strong></h3>
+<p>The driver's operational cycle is represented by a state machine. The <code>DriverState</code> enum defines the four possible states a driver can be in:</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># in simulator/agents/driver/driver.py</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">DriverState</span><span class="hljs-params">(Enum)</span>:</span>
+    <span class="hljs-string">"""Enumeration for the possible states of a DriverAgent."""</span>
+    OFFLINE = auto()            <span class="hljs-comment"># Not working</span>
+    IDLE = auto()               <span class="hljs-comment"># Online and waiting for an order</span>
+    DRIVING_TO_RIDER = auto()   <span class="hljs-comment"># Accepted an order, driving to pickup</span>
+    ON_TRIP = auto()            <span class="hljs-comment"># With a rider, driving to destination</span>
+</div></code></pre>
+<h3 id="the-driveragent-class-attributes-and-properties"><strong>The <code>DriverAgent</code> Class: Attributes and Properties</strong></h3>
+<p>When a <code>DriverAgent</code> is created by the <code>Market</code>, it is initialized with a set of properties that define its professional profile and economic behavior.</p>
+<p>Let's inspect the parameters of the <code>__init__</code> method:</p>
+<ul>
+<li>
+<p><strong>Core Identity &amp; Attributes</strong>: These define the driver's relationship with the platforms.</p>
+<ul>
+<li><code>agent_id</code>: A unique integer identifier.</li>
+<li><code>is_exclusive</code>: A boolean indicating whether the driver works for only one platform or is a &quot;multi-homer.&quot;</li>
+</ul>
+</li>
+<li>
+<p><strong>Behavioral Properties</strong>: These attributes are the core drivers of a driver's economic decisions.</p>
+<ul>
+<li><code>preference_score</code>: Similar to the rider, this float models a driver's preference for platform A (positive) or B (negative). (Note: This is not yet used in the core logic).</li>
+<li><code>price_sensitivity</code>: A float that determines how much a high fare <strong>positively</strong> influences the driver's decision to accept an offer.</li>
+<li><code>eta_sensitivity</code>: A float that determines how much the unpaid travel time to a rider <strong>negatively</strong> influences the acceptance decision.</li>
+</ul>
+</li>
+<li>
+<p><strong>Dynamic State</strong>: These attributes change as the driver interacts with the market.</p>
+<ul>
+<li><code>current_state</code>: Initialized to <code>DriverState.OFFLINE</code>, this tracks the agent's current status.</li>
+<li><code>location</code>: A tuple <code>(x, y)</code> for the driver's position.</li>
+<li><code>idle_timer</code>: A counter (in ticks) for how long a driver has been <code>IDLE</code>. Initialized to <code>0</code>.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="2-decision-making-logic-a-step-by-step-walkthrough">2. Decision-Making Logic: A Step-by-Step Walkthrough</h2>
+<p>We will now trace the key decisions a driver makes during the simulation, from coming online to accepting a ride.</p>
+<h3 id="step-1-the-decision-to-go-online-or-offline"><strong>Step 1: The Decision to Go Online or Offline</strong></h3>
+<p>This logic is executed once per <strong>Major Tick</strong> in the <code>update_driver_go_online_decisions</code> method within <code>simulator/market/market.py</code>. The current implementation is a simple probabilistic model.</p>
+<ol>
+<li>
+<p><strong>Going Online</strong>: For every driver who is <code>OFFLINE</code>, a random check is performed. There is a 10% chance each major tick that they will switch their state to <code>IDLE</code>.</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># in simulator/market/market.py</span>
+<span class="hljs-keyword">if</span> driver.current_state == DriverState.OFFLINE:
+    <span class="hljs-keyword">if</span> random.random() &lt; <span class="hljs-number">0.1</span>:
+        driver.current_state = DriverState.IDLE
+        logging.info(<span class="hljs-string">f"<span class="hljs-subst">{time_str}</span> | Driver <span class="hljs-subst">{driver.agent_id}</span> is now IDLE."</span>)
+</div></code></pre>
+</li>
+<li>
+<p><strong>Going Offline</strong>: Similarly, for every driver who is currently <code>IDLE</code>, there is a 5% chance they will switch back to <code>OFFLINE</code>.</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># in simulator/market/market.py</span>
+<span class="hljs-keyword">elif</span> driver.current_state == DriverState.IDLE:
+    <span class="hljs-keyword">if</span> random.random() &lt; <span class="hljs-number">0.05</span>:
+        driver.current_state = DriverState.OFFLINE
+        logging.info(<span class="hljs-string">f"<span class="hljs-subst">{time_str}</span> | Driver <span class="hljs-subst">{driver.agent_id}</span> is now OFFLINE."</span>)
+</div></code></pre>
+</li>
+</ol>
+<h3 id="step-2-the-decision-to-accept-an-offer"><strong>Step 2: The Decision to Accept an Offer</strong></h3>
+<p>This is the most critical economic decision the driver makes. It occurs during a <strong>Minor Tick</strong> within the <code>process_order</code> method of the <code>Matcher</code> (<code>simulator/platform/matcher.py</code>).</p>
+<ol>
+<li>
+<p><strong>Receiving an Offer</strong>: The <code>Matcher</code> finds an <code>IDLE</code> driver and presents them with a potential ride, which includes a <code>fare</code> and an <code>eta_to_rider</code>.</p>
+</li>
+<li>
+<p><strong>Calculating Profitability</strong>: The <code>Matcher</code> then calls the <code>calculate_profitability_score</code> function from <code>simulator/agents/driver/logic.py</code> to evaluate how &quot;good&quot; the offer is for that specific driver.</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># in simulator/platform/matcher.py</span>
+profitability_score = calculate_profitability_score(driver, fare, eta_to_rider)
+</div></code></pre>
+<p>Let's look at the calculation itself. The function balances the reward (fare) against the cost (unpaid travel time):</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># in simulator/agents/driver/logic.py</span>
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">calculate_profitability_score</span><span class="hljs-params">(
+    driver: DriverAgent,
+    fare: float,
+    eta_to_rider: int
+)</span> -&gt; float:</span>
+    score = (
+        (driver.price_sensitivity * fare)
+        - (driver.eta_sensitivity * eta_to_rider)
+    )
+    <span class="hljs-keyword">return</span> score
+</div></code></pre>
+<ul>
+<li><code>(driver.price_sensitivity * fare)</code>: This term is the <strong>positive</strong> component. A higher fare or a more price-sensitive driver increases the score.</li>
+<li><code>- (driver.eta_sensitivity * eta_to_rider)</code>: This term is the <strong>negative</strong> component. A longer travel time to the rider or a driver more sensitive to unpaid time decreases the score.</li>
+</ul>
+</li>
+<li>
+<p><strong>The Acceptance Threshold</strong>: The decision to accept is based on a simple threshold. If the calculated score is positive, the ride is profitable enough to accept.</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># in simulator/platform/matcher.py</span>
+<span class="hljs-keyword">if</span> profitability_score &gt; <span class="hljs-number">0</span>:
+    driver.current_state = DriverState.DRIVING_TO_RIDER
+    rider.current_state = RiderState.ORDERED
+    <span class="hljs-keyword">return</span> driver, <span class="hljs-string">"MATCH_SUCCESSFUL"</span>
+</div></code></pre>
+<p>If the driver accepts, both their state and the rider's state are updated, and the match is considered successful. If the score is not greater than 0, the <code>Matcher</code> will move on to the next available driver.</p>
+</li>
+</ol>
+<hr>
+<h2 id="3-analysis-and-potential-logical-flaws">3. Analysis and Potential Logical Flaws</h2>
+<p>This detailed review of the <code>DriverAgent</code>'s logic highlights several areas of simplification that are important for developers to recognize:</p>
+<ol>
+<li><strong>Simplistic &quot;Go Online&quot; Logic</strong>: The decision to start or stop working is purely random, based on fixed probabilities (<code>0.1</code> and <code>0.05</code>). A more sophisticated model would have drivers make this decision based on factors like the time of day, perceived demand, or active incentive campaigns (e.g., bonuses).</li>
+<li><strong>Hardcoded Acceptance Threshold</strong>: The driver accepts any ride with a <code>profitability_score &gt; 0</code>. This threshold could be a configurable behavioral attribute of the driver (e.g., some drivers might only accept rides with a score &gt; 2.0).</li>
+<li><strong>No Multi-Homing Logic</strong>: While drivers have an <code>is_exclusive</code> attribute and a <code>preference_score</code>, there is currently no logic that uses these properties. A non-exclusive driver does not choose which platform to be active on or switch between apps if they have been idle for a long time. The platform they receive an offer from is determined entirely by the rider's choice.</li>
+<li><strong>Static Behavioral Traits</strong>: Similar to the rider, the driver's <code>price_sensitivity</code>, <code>eta_sensitivity</code>, and <code>preference_score</code> are set at initialization and never change. A more dynamic simulation would have these traits (especially the preference score) evolve based on the driver's earnings and experiences on each platform.</li>
+</ol>
+
+</body>
+</html>

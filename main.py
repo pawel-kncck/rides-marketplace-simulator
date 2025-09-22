@@ -38,6 +38,9 @@ def main():
     market.set_platforms(platforms)
     engine = Engine(market, platforms)
 
+    # Link the market to the engine to allow event scheduling
+    market.set_engine(engine)
+
     engine.run(
         duration_days=config['simulation']['duration_days'],
         ticks_per_major=config['simulation']['ticks_per_major']

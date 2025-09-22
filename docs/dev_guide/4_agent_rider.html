@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>4_agent_rider.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="developer-guide-the-rider-agent">Developer Guide: The Rider Agent</h1>
+<p>This document provides an in-depth analysis of the <code>RiderAgent</code>. Its purpose is to detail the agent's structure, its behavioral logic, and how its state is managed throughout the simulation. We will proceed step-by-step to build a clear picture of the implementation, which is essential for identifying potential logical flaws or areas for future improvement.</p>
+<p>It is critical to understand that the <code>RiderAgent</code> class in <code>simulator/agents/rider/rider.py</code> is primarily a <strong>data container</strong>. The logic that reads its properties and triggers state changes is located in other modules, most notably <code>simulator/market/market.py</code> and <code>simulator/agents/rider/logic.py</code>.</p>
+<hr>
+<h2 id="1-core-components-the-anatomy-of-a-rider">1. Core Components: The Anatomy of a Rider</h2>
+<p>Let's begin by examining the definition of the <code>RiderAgent</code> in <code>simulator/agents/rider/rider.py</code>.</p>
+<h3 id="the-riderstate-enum-a-riders-lifecycle"><strong>The <code>RiderState</code> Enum: A Rider's Lifecycle</strong></h3>
+<p>A rider's journey through the simulation is defined by a state machine. The <code>RiderState</code> enum provides a clear and safe way to represent every possible state:</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># in simulator/agents/rider/rider.py</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">RiderState</span><span class="hljs-params">(Enum)</span>:</span>
+    <span class="hljs-string">"""Enumeration for the possible states of a RiderAgent."""</span>
+    IDLE = auto()               <span class="hljs-comment"># Not looking for a ride</span>
+    SEARCHING = auto()          <span class="hljs-comment"># Actively searching on a platform</span>
+    COMPARING_OFFERS = auto()   <span class="hljs-comment"># Has at least one offer, checking competitor</span>
+    ORDERED = auto()            <span class="hljs-comment"># Accepted an offer, waiting for driver</span>
+    ON_TRIP = auto()            <span class="hljs-comment"># In a vehicle, on the way to destination</span>
+    ABANDONED_SEARCH = auto()   <span class="hljs-comment"># Gave up searching for a ride</span>
+</div></code></pre>
+<h3 id="the-rideragent-class-attributes-and-properties"><strong>The <code>RiderAgent</code> Class: Attributes and Properties</strong></h3>
+<p>When the <code>Market</code> creates a <code>RiderAgent</code>, it initializes it with a set of properties that define its identity and behavior. These are set once and, for the most part, do not change during the simulation.</p>
+<p>Let's break down the <code>__init__</code> method's parameters:</p>
+<ul>
+<li>
+<p><strong>Behavioral Properties</strong>: These attributes are the core drivers of a rider's decisions.</p>
+<ul>
+<li><code>preference_score</code>: A float ranging from <strong>-1.0 (total preference for platform B)</strong> to <strong>+1.0 (total preference for platform A)</strong>. This is a crucial variable for modeling brand loyalty and market inertia.</li>
+<li><code>price_sensitivity</code> &amp; <code>time_sensitivity</code>: These floats determine how strongly price and ETA will negatively affect a rider's evaluation of an offer.</li>
+<li><code>rides_per_week</code>: This float represents the agent's baseline demand and is the key input for determining when they start looking for a ride.</li>
+</ul>
+</li>
+<li>
+<p><strong>Dynamic State</strong>: These attributes are designed to change as the simulation progresses.</p>
+<ul>
+<li><code>current_state</code>: Initialized to <code>RiderState.IDLE</code>, this tracks the agent's position in the state machine.</li>
+<li><code>patience_timer</code>: A countdown timer (in ticks) that models how long a rider will wait before abandoning their search. It is initialized to <code>0</code>.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="2-decision-making-logic-a-step-by-step-walkthrough">2. Decision-Making Logic: A Step-by-Step Walkthrough</h2>
+<p>Now, we will trace the journey of a rider from <code>IDLE</code> to completing or abandoning a trip, referencing the code that executes each step.</p>
+<h3 id="step-1-the-decision-to-search-for-a-ride"><strong>Step 1: The Decision to Search for a Ride</strong></h3>
+<p>This logic resides in <code>simulator/market/market.py</code> and is executed once per <strong>Major Tick</strong>.</p>
+<ol>
+<li>
+<p><strong>Condition Check</strong>: The code iterates through all riders and only considers those in the <code>IDLE</code> state.</p>
+</li>
+<li>
+<p><strong>Probability Calculation</strong>: For each <code>IDLE</code> rider, a probability of searching is calculated. The logic converts their weekly ride frequency into an hourly probability.</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># in simulator/market/market.py, inside update_rider_search_intent</span>
+prob = rider.rides_per_week / (<span class="hljs-number">7</span> * <span class="hljs-number">24</span>)
+<span class="hljs-keyword">if</span> random.random() &lt; prob:
+    <span class="hljs-comment"># ... transition to SEARCHING</span>
+</div></code></pre>
+</li>
+<li>
+<p><strong>State Transition</strong>: If the random check passes, two crucial state changes occur:</p>
+<ul>
+<li>The rider's state is updated: <code>rider.current_state = RiderState.SEARCHING</code>.</li>
+<li>The rider's <code>patience_timer</code> is activated with a hardcoded value: <code>rider.patience_timer = 180</code>.</li>
+</ul>
+</li>
+</ol>
+<h3 id="step-2-choosing-a-platform-to-search-on"><strong>Step 2: Choosing a Platform to Search On</strong></h3>
+<p>This logic is found in <code>simulator/market/market.py</code> and is executed for every <code>SEARCHING</code> rider during each <strong>Minor Tick</strong>.</p>
+<p>The platform choice logic is a simple, deterministic set of rules based on app ownership and the static <code>preference_score</code>.</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># in simulator/market/market.py, inside process_rider_searches</span>
+<span class="hljs-keyword">if</span> rider.has_app_a <span class="hljs-keyword">and</span> rider.preference_score &gt; <span class="hljs-number">0</span>:
+    chosen_platform_id = <span class="hljs-string">'A'</span>
+<span class="hljs-keyword">elif</span> rider.has_app_b <span class="hljs-keyword">and</span> rider.preference_score &lt;= <span class="hljs-number">0</span>:
+    chosen_platform_id = <span class="hljs-string">'B'</span>
+<span class="hljs-keyword">elif</span> rider.has_app_a:
+    chosen_platform_id = <span class="hljs-string">'A'</span>
+<span class="hljs-keyword">elif</span> rider.has_app_b:
+    chosen_platform_id = <span class="hljs-string">'B'</span>
+</div></code></pre>
+<p>After this block, the chosen platform's <code>matcher.process_order</code> method is called, which attempts to find a driver for the rider.</p>
+<h3 id="step-3-the-patience-timer-and-search-abandonment"><strong>Step 3: The Patience Timer and Search Abandonment</strong></h3>
+<p>If the <code>matcher.process_order</code> call in the previous step does not result in a successful match (<code>status != &quot;MATCH_SUCCESSFUL&quot;</code>), the rider's patience begins to wane.</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># in simulator/market/market.py, inside process_rider_searches</span>
+<span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> match_successful:
+    rider.patience_timer -= <span class="hljs-number">1</span>
+    <span class="hljs-keyword">if</span> rider.patience_timer &lt;= <span class="hljs-number">0</span>:
+        rider.current_state = RiderState.ABANDONED_SEARCH
+        logging.info(<span class="hljs-string">f"<span class="hljs-subst">{time_str}</span> | Rider <span class="hljs-subst">{rider.agent_id}</span> ABANDONED SEARCH."</span>)
+</div></code></pre>
+<p>This logic decrements the timer on every unsuccessful minor tick. If the timer reaches zero, the rider's state is set to <code>ABANDONED_SEARCH</code>, and they stop looking for a ride for this session.</p>
+<h3 id="step-4-the-currently-unused-utility-function"><strong>Step 4: The (Currently Unused) Utility Function</strong></h3>
+<p>The file <code>simulator/agents/rider/logic.py</code> contains the economic core of the rider's decision-making, the <code>calculate_utility</code> function. <strong>It is crucial to note that this function is not currently called anywhere in the main simulation loop.</strong> It exists with corresponding unit tests but is not yet integrated.</p>
+<p>The function's purpose is to calculate a single numerical score representing how &quot;good&quot; an offer is for a particular rider.</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># in simulator/agents/rider/logic.py</span>
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">calculate_utility</span><span class="hljs-params">(
+    rider: RiderAgent,
+    price: float,
+    eta: int,
+    preference_score_weight: float
+)</span> -&gt; float:</span>
+    utility = (
+        (-rider.price_sensitivity * price)
+        + (-rider.time_sensitivity * eta)
+        + (preference_score_weight * rider.preference_score)
+    )
+    <span class="hljs-keyword">return</span> utility
+</div></code></pre>
+<ul>
+<li><code>(-rider.price_sensitivity * price)</code>: This term calculates the &quot;pain&quot; from the price. The higher the price or the rider's sensitivity, the more negative this term becomes.</li>
+<li><code>(-rider.time_sensitivity * eta)</code>: Similarly, this calculates the &quot;pain&quot; from the wait time.</li>
+<li><code>(preference_score_weight * rider.preference_score)</code>: This term introduces the rider's bias. A positive score for platform A will increase the utility of an offer from that platform.</li>
+</ul>
+<hr>
+<h2 id="3-analysis-and-potential-logical-flaws">3. Analysis and Potential Logical Flaws</h2>
+<p>This deliberate, step-by-step review uncovers several important simplifications and areas where the model's logic could be extended or refined:</p>
+<ol>
+<li><strong>No True Offer Comparison</strong>: The most significant logical gap is that the <code>calculate_utility</code> function is never used. A rider with both apps (<code>multi-homer</code>) makes a deterministic choice based on <code>preference_score</code> and never gets to compare competing offers on price and ETA.</li>
+<li><strong>Static Behavioral Traits</strong>: The <code>preference_score</code> is a powerful concept, but it is static. It's set at the beginning of the simulation and never changes. A more dynamic model would have this score evolve based on the rider's experiences (e.g., a successful, quick, and cheap ride should slightly increase the preference for that platform).</li>
+<li><strong>Hardcoded Patience</strong>: The <code>patience_timer</code> is always set to <code>180</code> ticks. This is a missed opportunity for heterogeneity. A more realistic simulation would draw this value from a distribution in the config, just like the sensitivity parameters.</li>
+<li><strong>No Feedback from Abandonment</strong>: When a rider's search is abandoned, it is a significant negative event. Currently, this only results in a log entry. There is no feedback mechanism; it does not decrease their <code>preference_score</code> for the platform they were searching on, nor does it make them less likely to search again soon.</li>
+</ol>
+
+</body>
+</html>

@@ -5,7 +5,7 @@ from simulator.market.space import HexGrid
 from simulator.agents.rider.rider import RiderAgent, RiderState
 from simulator.agents.driver.driver import DriverAgent, DriverState
 from simulator.platform.platform import Platform
-from simulator.utils.time_utils import ticks_to_time_string # <-- ADD THIS
+from simulator.utils.time_utils import ticks_to_time_string
 
 class Market:
     """
@@ -18,6 +18,9 @@ class Market:
         Args:
             config: The simulation configuration.
         """
+        self.config = config
+        self.engine = None # Will be set later
+        self.ticks_per_major = self.config['simulation']['ticks_per_major']
         self.grid = HexGrid(config['market']['grid_resolution'])
         self.platforms: List[Platform] = []
         self.riders: List[RiderAgent] = []
@@ -26,9 +29,29 @@ class Market:
         self._create_riders(config)
         self._create_drivers(config)
 
+    def set_engine(self, engine):
+        """Links the market to the simulation engine and schedules initial events."""
+        self.engine = engine
+        self._schedule_initial_events()
+
     def set_platforms(self, platforms: List[Platform]):
         """Sets the platforms for the market."""
         self.platforms = platforms
+
+    def _schedule_initial_events(self):
+        """Schedules the first evaluation event for all agents."""
+        for rider in self.riders:
+            initial_tick = random.randint(0, self.ticks_per_major)
+            self.engine.schedule_event(
+                initial_tick,
+                {"action": "EVALUATE_RIDER_SEARCH_INTENT", "agent_id": rider.agent_id}
+            )
+        for driver in self.drivers:
+            initial_tick = random.randint(0, self.ticks_per_major)
+            self.engine.schedule_event(
+                initial_tick,
+                {"action": "EVALUATE_DRIVER_GO_ONLINE", "agent_id": driver.agent_id}
+            )
 
     def _create_riders(self, config: Dict):
         """
@@ -36,7 +59,6 @@ class Market:
         """
         rider_config = config['market']['rider_population']
         for i in range(config['market']['initial_riders']):
-            # Logic for app ownership based on config probabilities
             app_roll = random.random()
             has_app_a, has_app_b = False, False
             if app_roll < rider_config['pct_with_app_a_only']:
@@ -76,39 +98,57 @@ class Market:
             self.drivers.append(driver)
             self.grid.add_agent(driver)
 
+    def handle_event(self, event: Dict, current_tick: int):
+        action = event.get("action")
+        agent_id = event.get("agent_id")
+        time_str = ticks_to_time_string(current_tick // self.ticks_per_major, current_tick % self.ticks_per_major, self.ticks_per_major)
+
+        if action == "EVALUATE_DRIVER_GO_ONLINE":
+            driver = next((d for d in self.drivers if d.agent_id == agent_id), None)
+            if driver and driver.current_state == DriverState.OFFLINE:
+                if random.random() < 0.1:  # Simplified probability
+                    driver.current_state = DriverState.IDLE
+                    logging.info(f"{time_str} | Driver {driver.agent_id} is now IDLE at location {driver.location}.")
+            
+            if driver:
+                # Schedule next evaluation
+                next_evaluation_tick = current_tick + 360  # Approx. 1 hour later
+                self.engine.schedule_event(
+                    next_evaluation_tick,
+                    {"action": "EVALUATE_DRIVER_GO_ONLINE", "agent_id": agent_id}
+                )
+
+        elif action == "EVALUATE_RIDER_SEARCH_INTENT":
+            rider = next((r for r in self.riders if r.agent_id == agent_id), None)
+            if rider and rider.current_state == RiderState.IDLE:
+                # Probability of searching in this evaluation interval
+                prob = rider.rides_per_week / (7 * 24 * 4) # Assuming evaluation every 15 mins
+                if random.random() < prob:
+                    rider.current_state = RiderState.SEARCHING
+                    rider.patience_timer = 180  # 30 minutes
+                    logging.info(f"{time_str} | Rider {rider.agent_id} is now SEARCHING.")
+
+            if rider:
+                # Schedule next evaluation with some randomness
+                interval = random.expovariate(1.0 / 90.0) # Average 15 mins (90 ticks)
+                next_evaluation_tick = current_tick + int(interval)
+                self.engine.schedule_event(
+                    next_evaluation_tick,
+                    {"action": "EVALUATE_RIDER_SEARCH_INTENT", "agent_id": agent_id}
+                )
+
     def update_platform_strategies(self, day: int):
         pass
 
-    def update_driver_go_online_decisions(self, day: int):
-        # We need ticks_per_major to format the time string correctly
-        # This is a simplification; a better implementation would pass config around
-        time_str = ticks_to_time_string(day, 0, 360) 
-        for driver in self.drivers:
-            if driver.current_state == DriverState.OFFLINE:
-                if random.random() < 0.1:
-                    driver.current_state = DriverState.IDLE
-                    logging.info(f"{time_str} | Driver {driver.agent_id} is now IDLE.")
-            elif driver.current_state == DriverState.IDLE:
-                if random.random() < 0.05:
-                    driver.current_state = DriverState.OFFLINE
-                    logging.info(f"{time_str} | Driver {driver.agent_id} is now OFFLINE.")
-
-    def update_rider_search_intent(self, day: int):
-        time_str = ticks_to_time_string(day, 0, 360)
-        for rider in self.riders:
-            if rider.current_state == RiderState.IDLE:
-                prob = rider.rides_per_week / (7 * 24)
-                if random.random() < prob:
-                    rider.current_state = RiderState.SEARCHING
-                    rider.patience_timer = 180 # Set patience to 30 minutes (180 ticks * 10s/tick)
-                    logging.info(f"{time_str} | Rider {rider.agent_id} is now SEARCHING.")
-
     def process_rider_searches(self, day: int, tick: int):
-        time_str = ticks_to_time_string(day, tick, 360)
+        time_str = ticks_to_time_string(day, tick, self.ticks_per_major)
         for rider in self.riders:
             if rider.current_state == RiderState.SEARCHING:
+                order_id = f"order_{rider.agent_id}_{day}_{tick}"
+                logging.info(f"{time_str} | Rider {rider.agent_id} is now SEARCHING with Order {order_id}.")
+                logging.info(f"Rider {rider.agent_id} starting search for Order {order_id} from location {rider.location}.")
+
                 chosen_platform_id = None
-                # Platform Choice Logic
                 if rider.has_app_a and rider.preference_score > 0:
                     chosen_platform_id = 'A'
                 elif rider.has_app_b and rider.preference_score <= 0:
@@ -119,54 +159,63 @@ class Market:
                     chosen_platform_id = 'B'
 
                 if chosen_platform_id:
-                    # Find the Platform Object
-                    chosen_platform = None
-                    for p in self.platforms:
-                        if p.platform_id == chosen_platform_id:
-                            chosen_platform = p
-                            break
-                
-                # This is a simplification. Assume 'success' is whether a driver was found.
-                match_successful = False
-                if chosen_platform:
-                    driver, status = chosen_platform.matcher.process_order(rider, 20.0)
-                    if status == "MATCH_SUCCESSFUL":
-                        match_successful = True
-
-                if not match_successful:
-                    rider.patience_timer -= 1
-                    if rider.patience_timer <= 0:
-                        rider.current_state = RiderState.ABANDONED_SEARCH
-                        logging.info(f"{time_str} | Rider {rider.agent_id} ABANDONED SEARCH.")
+                    chosen_platform = next((p for p in self.platforms if p.platform_id == chosen_platform_id), None)
+                    
+                    if chosen_platform:
+                        driver, status = chosen_platform.matcher.process_order(rider, 20.0, order_id)
+                        if status == "MATCH_SUCCESSFUL":
+                            rider.current_state = RiderState.ORDERED
+                            driver.current_state = DriverState.DRIVING_TO_RIDER
+                            match_info = {"driver_id": driver.agent_id, "rider_id": rider.agent_id, "platform_id": chosen_platform.platform_id, "order_id": order_id}
+                            rider.match = match_info
+                            driver.match = match_info
+                            logging.info(f"{time_str} | Match successful for Order {order_id} (Rider {rider.agent_id} and Driver {driver.agent_id} on Platform {chosen_platform.platform_id})")
+                        else:
+                            rider.patience_timer -= 1
+                            if rider.patience_timer <= 0:
+                                rider.current_state = RiderState.ABANDONED_SEARCH
+                                logging.info(f"{time_str} | Rider {rider.agent_id} ABANDONED SEARCH for Order {order_id}.")
+                    else:
+                        rider.patience_timer -= 1
+                        if rider.patience_timer <= 0:
+                            rider.current_state = RiderState.ABANDONED_SEARCH
+                            logging.info(f"{time_str} | Rider {rider.agent_id} ABANDONED SEARCH for Order {order_id}.")
 
     def process_matcher_offers(self, day: int, tick: int):
-        # print("Processing matcher offers...")
         pass
 
     def process_driver_responses(self, day: int, tick: int):
-        # print("Processing driver responses...")
         pass
     
     def update_agent_locations(self, day: int, tick: int):
-        time_str = ticks_to_time_string(day, tick, 360)
-        """
-        Find matched drivers and riders and simulate trip completion.
-        """
+        time_str = ticks_to_time_string(day, tick, self.ticks_per_major)
+        current_tick = day * self.ticks_per_major + tick
+        
         for driver in self.drivers:
             if driver.current_state == DriverState.DRIVING_TO_RIDER:
-                # Find the corresponding rider
-                for rider in self.riders:
-                    if rider.current_state == RiderState.ORDERED:
-                        # This is a simplification. A real implementation would
-                        # have a direct link between the matched driver and rider.
-                        
-                        # Simulate instantaneous trip completion
-                        new_location = (random.randint(0, 10000), random.randint(0, 10000))
-                        driver.location = new_location
-                        rider.location = new_location
+                # The driver object has the match info
+                rider_id = driver.match['rider_id']
+                rider = next((r for r in self.riders if r.agent_id == rider_id), None)
 
-                        driver.current_state = DriverState.IDLE
-                        rider.current_state = RiderState.IDLE
+                if rider and rider.current_state == RiderState.ORDERED:
+                    # Simulate instantaneous trip completion
+                    new_location = (random.randint(0, 10000), random.randint(0, 10000))
+                    driver.location = new_location
+                    rider.location = new_location
 
-                        logging.info(f"{time_str} | Trip completed for Rider {rider.agent_id} and Driver {driver.agent_id}.")
-                        break # Move to the next driver
+                    driver.current_state = DriverState.IDLE
+                    rider.current_state = RiderState.IDLE
+                    driver.match = None
+                    rider.match = None
+                    
+                    logging.info(f"{time_str} | Trip completed for Rider {rider.agent_id} and Driver {driver.agent_id}.")
+
+                    # Schedule next evaluations
+                    self.engine.schedule_event(
+                        current_tick + 1,
+                        {"action": "EVALUATE_DRIVER_GO_ONLINE", "agent_id": driver.agent_id}
+                    )
+                    self.engine.schedule_event(
+                        current_tick + 1,
+                        {"action": "EVALUATE_RIDER_SEARCH_INTENT", "agent_id": rider.agent_id}
+                    )

@@ -55,6 +55,7 @@ class RiderAgent:
         self.location: Tuple[int, int] = initial_location
         # The countdown timer used during a search to model patience.
         self.patience_timer: int = 0
+        self.match: Dict[str, Any] = None
 
         # --- Incentives & Testing ---
         # A list to store any active discounts offered to this rider.

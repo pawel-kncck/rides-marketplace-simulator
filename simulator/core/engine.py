@@ -1,5 +1,6 @@
 import time
 from typing import List
+from collections import defaultdict
 
 class Engine:
     """
@@ -15,6 +16,11 @@ class Engine:
         """
         self.market = market
         self.platforms = platforms
+        self.event_schedule = defaultdict(list)
+        self.current_tick = 0
+
+    def schedule_event(self, tick, event):
+        self.event_schedule[tick].append(event)
 
     def run(self, duration_days: int, ticks_per_major: int):
         """
@@ -24,19 +30,24 @@ class Engine:
             duration_days: The duration of the simulation in days.
             ticks_per_major: The number of minor ticks per major tick.
         """
-        for day in range(duration_days):
-            # --- Major Tick Logic ---
-            self.market.update_platform_strategies(day)
-            self.market.update_driver_go_online_decisions(day)
-            self.market.update_rider_search_intent(day)
+        total_ticks = duration_days * ticks_per_major
+        for self.current_tick in range(total_ticks):
+            day = self.current_tick // ticks_per_major
+            tick_in_day = self.current_tick % ticks_per_major
 
-            for tick in range(ticks_per_major):
-                # --- Minor Tick Logic ---
-                self.market.process_rider_searches(day, tick)
-                self.market.process_matcher_offers(day, tick)
-                self.market.process_driver_responses(day, tick)
-                self.market.update_agent_locations(day, tick)
-                pass
+            # --- Event-Driven Logic ---
+            events = self.event_schedule.get(self.current_tick, [])
+            for event in events:
+                self.market.handle_event(event, self.current_tick)
 
-            print(f"Day {day + 1} complete.")
-            time.sleep(0.1) # <-- ADD THIS LINE to pause for 0.1 seconds
+            # --- Minor Tick Logic (remains the same) ---
+            self.market.process_rider_searches(day, tick_in_day)
+            self.market.process_matcher_offers(day, tick_in_day)
+            self.market.process_driver_responses(day, tick_in_day)
+            self.market.update_agent_locations(day, tick_in_day)
+
+            # --- Major Tick Logic (simplified) ---
+            if self.current_tick % ticks_per_major == 0:
+                self.market.update_platform_strategies(day)
+                print(f"Day {day + 1} complete.")
+                time.sleep(0.1)

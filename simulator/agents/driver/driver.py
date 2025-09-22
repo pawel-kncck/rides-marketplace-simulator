@@ -37,6 +37,7 @@ class DriverAgent:
         self.current_state: DriverState = DriverState.OFFLINE
         self.location: Tuple[int, int] = initial_location
         self.idle_timer: int = 0
+        self.match: Dict[str, Any] = None
 
     def __repr__(self) -> str:
         """
