@@ -6,25 +6,29 @@ from simulator.agents.rider.rider import RiderAgent, RiderState
 from simulator.agents.driver.driver import DriverAgent, DriverState
 from simulator.platform.platform import Platform
 from simulator.utils.time_utils import ticks_to_time_string
+from simulator.utils.metrics import SimulationMetrics
 
 class Market:
     """
     The central market module.
     """
-    def __init__(self, config: Dict):
+    def __init__(self, config: Dict, csv_logger):
         """
         Initializes the Market.
 
         Args:
             config: The simulation configuration.
+            csv_logger: The CSV logger instance.
         """
         self.config = config
+        self.csv_logger = csv_logger
         self.engine = None # Will be set later
         self.ticks_per_major = self.config['simulation']['ticks_per_major']
         self.grid = HexGrid(config['market']['grid_resolution'])
         self.platforms: List[Platform] = []
         self.riders: List[RiderAgent] = []
         self.drivers: List[DriverAgent] = []
+        self.metrics = SimulationMetrics()
 
         self._create_riders(config)
         self._create_drivers(config)
@@ -76,7 +80,8 @@ class Market:
                 preference_score=random.normalvariate(*rider_config['preference_score_dist']),
                 price_sensitivity=random.normalvariate(*rider_config['price_sensitivity_dist']),
                 time_sensitivity=random.normalvariate(*rider_config['time_sensitivity_dist']),
-                rides_per_week=max(0, random.normalvariate(*rider_config['rides_per_week_dist']))
+                rides_per_week=max(0, random.normalvariate(*rider_config['rides_per_week_dist'])),
+                patience_ticks=max(1, int(random.normalvariate(*rider_config['patience_ticks_dist'])))
             )
             self.riders.append(rider)
             self.grid.add_agent(rider)
@@ -110,6 +115,8 @@ class Market:
             if driver and driver.current_state == DriverState.OFFLINE:
                 if random.random() < 0.1:  # Simplified probability
                     driver.current_state = DriverState.IDLE
+                    self.metrics.track_driver_online(driver.agent_id)
+                    self.csv_logger.log(time_str, "STATE_IDLE", driver_id=driver.agent_id, details=f"Driver {driver.agent_id} is now IDLE at location {driver.location}.")
                     logging.info(f"DRIVER  | STATE_IDLE       | {time_str} | Driver {driver.agent_id} is now IDLE at location {driver.location}.")
             
             if driver:
@@ -146,9 +153,15 @@ class Market:
         time_str = ticks_to_time_string(day, tick, self.ticks_per_major)
         for rider in self.riders:
             if rider.current_state == RiderState.SEARCHING:
-                order_id = f"order_{rider.agent_id}_{day}_{tick}"
-                logging.info(f"RIDER   | ORDER_CREATED    | {time_str} | Rider {rider.agent_id} starting search for Order {order_id} from location {rider.location}.")
+                # Step 1: Initiate Search Session (if new)
+                if rider.active_order_id is None:
+                    rider.active_order_id = f"order_{rider.agent_id}_{day}_{tick}"
+                    rider.patience_timer = rider.patience_ticks
+                    self.metrics.track_rider_search(rider.agent_id)
+                    self.csv_logger.log(time_str, "ORDER_CREATED", rider_id=rider.agent_id, details=f"Rider {rider.agent_id} starting search for Order {rider.active_order_id} from location {rider.location}.")
+                    logging.info(f"RIDER   | ORDER_CREATED    | {time_str} | Rider {rider.agent_id} starting search for Order {rider.active_order_id} from location {rider.location}.")
 
+                # Step 2: Continuous Matching Attempt
                 chosen_platform_id = None
                 if rider.has_app_a and rider.preference_score > 0:
                     chosen_platform_id = 'A'
@@ -163,24 +176,29 @@ class Market:
                     chosen_platform = next((p for p in self.platforms if p.platform_id == chosen_platform_id), None)
                     
                     if chosen_platform:
-                        driver, status = chosen_platform.matcher.process_order(rider, 20.0, order_id, day, tick)
+                        driver, status = chosen_platform.matcher.process_order(rider, 20.0, rider.active_order_id, day, tick)
+                        # Step 3: Handle Match Outcome
                         if status == "MATCH_SUCCESSFUL":
                             rider.current_state = RiderState.ORDERED
                             driver.current_state = DriverState.DRIVING_TO_RIDER
-                            match_info = {"driver_id": driver.agent_id, "rider_id": rider.agent_id, "platform_id": chosen_platform.platform_id, "order_id": order_id}
+                            match_info = {"driver_id": driver.agent_id, "rider_id": rider.agent_id, "platform_id": chosen_platform.platform_id, "order_id": rider.active_order_id}
                             rider.match = match_info
                             driver.match = match_info
-                            logging.info(f"MARKET  | MATCH_SUCCESSFUL | {time_str} | Match successful for Order {order_id} (Rider {rider.agent_id} and Driver {driver.agent_id} on Platform {chosen_platform.platform_id})")
-                        else:
+                            logging.info(f"MARKET  | MATCH_SUCCESSFUL | {time_str} | Match successful for Order {rider.active_order_id} (Rider {rider.agent_id} and Driver {driver.agent_id} on Platform {chosen_platform.platform_id})")
+                            rider.active_order_id = None # End the search session
+                        else: # Match unsuccessful
                             rider.patience_timer -= 1
                             if rider.patience_timer <= 0:
                                 rider.current_state = RiderState.ABANDONED_SEARCH
-                                logging.info(f"RIDER   | SEARCH_ABANDONED | {time_str} | Rider {rider.agent_id} ABANDONED SEARCH for Order {order_id}.")
-                    else:
+                                self.csv_logger.log(time_str, "SEARCH_ABANDONED", rider_id=rider.agent_id, details=f"Rider {rider.agent_id} ABANDONED SEARCH for Order {rider.active_order_id}.")
+                                logging.info(f"RIDER   | SEARCH_ABANDONED | {time_str} | Rider {rider.agent_id} ABANDONED SEARCH for Order {rider.active_order_id}.")
+                                rider.active_order_id = None # End the search session
+                    else: # No platform found
                         rider.patience_timer -= 1
                         if rider.patience_timer <= 0:
                             rider.current_state = RiderState.ABANDONED_SEARCH
-                            logging.info(f"RIDER   | SEARCH_ABANDONED | {time_str} | Rider {rider.agent_id} ABANDONED SEARCH for Order {order_id}.")
+                            logging.info(f"RIDER   | SEARCH_ABANDONED | {time_str} | Rider {rider.agent_id} ABANDONED SEARCH for Order {rider.active_order_id}.")
+                            rider.active_order_id = None # End the search session
 
     def process_matcher_offers(self, day: int, tick: int):
         pass
@@ -209,6 +227,8 @@ class Market:
                     driver.match = None
                     rider.match = None
                     
+                    self.metrics.track_completed_trip(driver.agent_id, rider.agent_id)
+                    self.csv_logger.log(time_str, "TRIP_COMPLETED", rider_id=rider.agent_id, driver_id=driver.agent_id, details=f"Trip completed for Rider {rider.agent_id} and Driver {driver.agent_id}.")
                     logging.info(f"MARKET  | TRIP_COMPLETED   | {time_str} | Trip completed for Rider {rider.agent_id} and Driver {driver.agent_id}.")
 
                     # Schedule next evaluations

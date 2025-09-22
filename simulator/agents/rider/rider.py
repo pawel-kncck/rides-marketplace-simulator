@@ -1,7 +1,7 @@
 # simulator/agents/rider/rider.py
 
 from enum import Enum, auto
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Optional
 
 # We define the possible states for a RiderAgent using an Enum.
 # This makes the code clearer, safer, and easier to debug than using simple strings.
@@ -31,7 +31,8 @@ class RiderAgent:
         preference_score: float,
         price_sensitivity: float,
         time_sensitivity: float,
-        rides_per_week: float
+        rides_per_week: float,
+        patience_ticks: int
     ):
         """
         Initializes a RiderAgent with its core attributes and default state.
@@ -48,6 +49,7 @@ class RiderAgent:
         self.time_sensitivity: float = time_sensitivity
         # Determines the agent's base probability of initiating a search.
         self.rides_per_week: float = rides_per_week
+        self.patience_ticks: int = patience_ticks
 
         # --- Dynamic State ---
         # All riders start in the IDLE state.
@@ -55,6 +57,7 @@ class RiderAgent:
         self.location: Tuple[int, int] = initial_location
         # The countdown timer used during a search to model patience.
         self.patience_timer: int = 0
+        self.active_order_id: Optional[str] = None
         self.match: Dict[str, Any] = None
 
         # --- Incentives & Testing ---

@@ -5,6 +5,7 @@ from simulator.market.market import Market
 from simulator.platform.matcher import Matcher
 from simulator.platform.platform import Platform
 from simulator.core.engine import Engine
+from simulator.utils.csv_logger import CsvLogger
 
 logging.basicConfig(
     level=logging.INFO,
@@ -22,7 +23,8 @@ def main():
     with open(args.config, 'r') as f:
         config = yaml.safe_load(f)
 
-    market = Market(config)
+    csv_logger = CsvLogger()
+    market = Market(config, csv_logger)
     
     # Create platforms based on the config file
     platforms = []
@@ -46,6 +48,9 @@ def main():
         duration_days=config['simulation']['duration_days'],
         ticks_per_major=config['simulation']['ticks_per_major']
     )
+
+    market.metrics.print_summary()
+    csv_logger.close()
 
 if __name__ == "__main__":
     main()

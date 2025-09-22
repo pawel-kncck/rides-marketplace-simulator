@@ -5,6 +5,7 @@ from simulator.agents.driver.driver import DriverAgent, DriverState
 from simulator.agents.rider.rider import RiderAgent, RiderState
 from simulator.agents.driver.logic import calculate_profitability_score
 from simulator.utils.time_utils import ticks_to_time_string
+from simulator.utils.helpers import calculate_distance
 
 class Matcher:
     """
@@ -24,11 +25,15 @@ class Matcher:
 
     def find_nearest_idle_drivers(self, rider: RiderAgent) -> List[DriverAgent]:
         """
-        Finds the N nearest idle drivers to a rider.
+        Finds idle drivers in the rider's cell and sorts them by distance.
         """
         rider_cell = self.grid.get_cell_id(rider.location)
         drivers_in_cell = self.grid.get_agents_in_cell(rider_cell)
         idle_drivers = [d for d in drivers_in_cell if isinstance(d, DriverAgent) and d.current_state == DriverState.IDLE]
+
+        # --- NEW LOGIC: Sort drivers by distance ---
+        idle_drivers.sort(key=lambda driver: calculate_distance(driver.location, rider.location))
+        
         return idle_drivers
 
     def process_order(self, rider: RiderAgent, fare: float, order_id: str, day: int, tick: int) -> Tuple[Optional[DriverAgent], str]:

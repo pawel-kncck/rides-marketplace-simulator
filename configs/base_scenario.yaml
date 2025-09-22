@@ -12,6 +12,7 @@ market:
     time_sensitivity_dist: [0.5, 0.2]
     preference_score_dist: [0.0, 0.3]
     rides_per_week_dist: [3.0, 1.5]
+    patience_ticks_dist: [18, 6] # [mean, std_dev] for ~3 minutes
     pct_with_app_a_only: 0.20
     pct_with_app_b_only: 0.20
     pct_with_both_apps: 0.60
